@@ -57,9 +57,8 @@ func NewUser(client *mongo.Client, env config.Env) User {
 func (c user) DeleteByEmail(email string) error {
 	ctx, concelFunc := initContext(c.env)
 	defer concelFunc()
-	collec := c.getCollection()
 	filter := bson.M{"email": email}
-	r, err := collec.DeleteOne(ctx, filter)
+	r, err := c.db().DeleteOne(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -71,8 +70,7 @@ func (c user) Create(entity *UserEntity) error {
 	ctx, cancelFunc := initContext(c.env)
 	defer cancelFunc()
 
-	collec := c.getCollection()
-	r, err := collec.InsertOne(ctx, entity)
+	r, err := c.db().InsertOne(ctx, entity)
 	if err != nil {
 		return err
 	}
@@ -87,11 +85,10 @@ func (c user) Create(entity *UserEntity) error {
 func (c user) UpdateById(entity UserEntity) error {
 	ctx, cancelFunc := initContext(c.env)
 	defer cancelFunc()
-	collec := c.getCollection()
 	set := bson.M{"$set": bson.M{
 		"info.first_name": "Kritchat2",
 	}}
-	r, err := collec.UpdateByID(ctx, entity.ID, set)
+	r, err := c.db().UpdateByID(ctx, entity.ID, set)
 	if err != nil {
 		return err
 	}
@@ -102,12 +99,11 @@ func (c user) UpdateById(entity UserEntity) error {
 func (c user) UpdateByCondition(entity UserEntity) error {
 	ctx, cancelFunc := initContext(c.env)
 	defer cancelFunc()
-	collec := c.getCollection()
 	on := bson.M{"email": entity.Email} //update for user who have email id match with condition
 	set := bson.M{"$set": bson.M{
 		"info.last_name": "Rojanaphruk2",
 	}}
-	r, err := collec.UpdateOne(ctx, on, set)
+	r, err := c.db().UpdateOne(ctx, on, set)
 	if err != nil {
 		return err
 	}
@@ -118,9 +114,8 @@ func (c user) UpdateByCondition(entity UserEntity) error {
 func (c user) FindOneById(id primitive.ObjectID) (*UserEntity, error) {
 	ctx, cancelFunc := initContext(c.env)
 	defer cancelFunc()
-	collec := c.getCollection()
 	filter := bson.M{"_id": id}
-	r := collec.FindOne(ctx, filter)
+	r := c.db().FindOne(ctx, filter)
 	if r.Err() != nil {
 		return nil, r.Err()
 	}
@@ -134,6 +129,6 @@ func (c user) FindOneById(id primitive.ObjectID) (*UserEntity, error) {
 
 }
 
-func (c user) getCollection() *mongo.Collection {
+func (c user) db() *mongo.Collection {
 	return c.client.Database(c.DBName).Collection(c.collectionName)
 }
